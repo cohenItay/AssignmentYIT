@@ -1,45 +1,44 @@
 package com.interview.itaycohen.assignmentyit
 
 import android.app.SearchManager
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.databinding.DataBindingUtil
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.SearchView
 import android.util.Log
 import android.view.Menu
 import android.widget.Toast
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 import com.interview.itaycohen.assignmentyit.databinding.ActivityBrowsePhotosBinding
 
 
 class BrowsePhotosActivity : AppCompatActivity() {
 
     lateinit private var binding : ActivityBrowsePhotosBinding
-    lateinit private var logic : BrowsePhotosLogic
+    lateinit var viewModel : BrowsePhotosViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_browse_photos)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        logic = BrowsePhotosLogic(this)
-        if (validateInternetConnection(this) == true){
-            handleIntent(intent)
-            initRecycler()
-        } else {
+        if (validateInternetConnection(this) != true){
             Toast.makeText(this, getString(R.string.noInternetConnectionWarning), Toast.LENGTH_LONG).show()
+            return
         }
+
+        viewModel = ViewModelProviders.of(this).get(BrowsePhotosViewModel::class.java)
+        viewModel.errorLiveData.observe(this, Observer {
+            Toast.makeText(this, getString(R.string.error_connecting_server), Toast.LENGTH_LONG).show() })
+        handleIntent(intent)
+        initRecycler()
     }
 
     private fun initRecycler() {
@@ -58,9 +57,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
         return true
     }
 
-    class OnSuggestionClickImpl(searchView: SearchView) : SearchView.OnSuggestionListener {
-
-        open val searchView = searchView
+    class OnSuggestionClickImpl(var searchView: SearchView) : SearchView.OnSuggestionListener {
 
         override fun onSuggestionSelect(position: Int): Boolean {
             //do nothing
@@ -89,12 +86,13 @@ class BrowsePhotosActivity : AppCompatActivity() {
                         RecentSuggestionsProvider.AUTHORITY,
                         RecentSuggestionsProvider.MODE
                 ).saveRecentQuery(query, null)
-                logic.sendSearchQuery(query)
+                viewModel.getBrowsePhotosLiveData(query, "1").observe(this, Observer{
+                    handleSuccess(it) })
             }
         }
     }
 
-    private fun handleSucces(response: String?) {
-
+    private fun handleSuccess(jsonResponseString: String?) {
+        Log.d("tag", jsonResponseString)
     }
 }

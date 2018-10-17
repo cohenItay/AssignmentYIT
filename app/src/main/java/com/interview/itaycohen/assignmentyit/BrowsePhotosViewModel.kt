@@ -3,43 +3,33 @@ package com.interview.itaycohen.assignmentyit
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.MutableLiveData
-import android.os.Bundle
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion.User
-import android.arch.lifecycle.LiveData
 import com.android.volley.Request
-import com.android.volley.RequestQueue
 import com.android.volley.Response
+import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion.User
 
 
-
-
-
-class BrowsePhotosViewModel(app : Application) : AndroidViewModel(app) {
+class BrowsePhotosViewModel constructor(var app : Application) : AndroidViewModel(app) {
 
     private var browsePhotosLiveData : MutableLiveData<String>? = null
-    private var queue : RequestQueue? = null
+    var errorLiveData : MutableLiveData<VolleyError> = MutableLiveData()
 
-    fun getBrowsePhotosLiveData(savedInstanceState : Bundle?) {
+    fun getBrowsePhotosLiveData(query: String, page: String) : MutableLiveData<String>{
         if (browsePhotosLiveData == null) {
             browsePhotosLiveData = MutableLiveData()
-            if (savedInstanceState == null) {
-
-            }
         }
-
+        sendSearchQuery(query, page)
+        return browsePhotosLiveData!! // no other thread using so it can't be changed back to null
     }
 
-    fun sendSearchQuery(query: String) :  {
-        if (queue = null)
-        var queue = Volley.newRequestQueue(ctx)
-        var pixabayUrl = res.getString(R.string.pixabay_url, query, res.getString(R.string.pixabay_key))
-        var request = StringRequest(
+    fun sendSearchQuery(query: String, page:String) {
+        val res = app.applicationContext.resources // Note: send activity from UIComponent is forbidden
+        val pixabayUrl = res.getString(R.string.pixabay_url, query, res.getString(R.string.pixabay_key), page)
+        val request = StringRequest(
                 Request.Method.GET,
                 pixabayUrl,
-                Response.Listener { response -> handleSucces(response) },
-                Response.ErrorListener { Toast.makeText(this, getString(R.string.error_connecting_server), Toast.LENGTH_LONG).show() })
+                Response.Listener { response ->  browsePhotosLiveData?.postValue(response) },
+                Response.ErrorListener { error -> errorLiveData.postValue(error) })
+        (app as ItaysApplication).requestsQueue.add(request)
     }
 }
