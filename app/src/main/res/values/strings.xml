@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AssignmentYIT</string>
+    <string name="browse_photos">Browse photos</string>
+    <string name="search_hint">לחפש תמונות של?</string>
+    <string name="noInternetConnectionWarning">אין חיבור לאינטרנט</string>
+    <string name="error_connecting_server">לא ניתן להתחבר לשרת</string>
+</resources>
