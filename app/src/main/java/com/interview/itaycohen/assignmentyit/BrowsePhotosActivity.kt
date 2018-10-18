@@ -13,10 +13,10 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.SearchView
-import android.util.Log
 import android.view.Menu
 import android.widget.Toast
 import com.interview.itaycohen.assignmentyit.databinding.ActivityBrowsePhotosBinding
+import kotlinx.android.synthetic.main.activity_browse_photos.*
 
 
 class BrowsePhotosActivity : AppCompatActivity() {
@@ -45,6 +45,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
         binding.recycler.setHasFixedSize(true)
         binding.recycler.layoutManager = GridLayoutManager(this, 4, GridLayoutManager.VERTICAL, true)
         binding.recycler.itemAnimator = DefaultItemAnimator()
+        //should have used custom ItemDecoration divider for gridlayout, but i presume its not the case in this task, so i used padding
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -93,6 +94,15 @@ class BrowsePhotosActivity : AppCompatActivity() {
     }
 
     private fun handleSuccess(jsonResponseString: String?) {
-        Log.d("tag", jsonResponseString)
+        if (jsonResponseString == null)
+            return
+
+        val images = parseToImageDataList(jsonResponseString)
+        if (recycler.adapter == null){
+            recycler.adapter =  PhotosAdapter(images)
+        } else {
+            (recycler.adapter as PhotosAdapter).images = images
+            recycler.adapter.notifyDataSetChanged()
+        }
     }
 }
