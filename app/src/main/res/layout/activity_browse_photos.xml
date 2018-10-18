@@ -13,7 +13,7 @@
             android:id="@+id/toolbar"
             android:layout_width="0dp"
             android:layout_height="?attr/actionBarSize"
-            app:theme="@style/ToolbarTheme"
+            style="@style/ToolbarTheme"
             app:title="@string/browse_photos"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

@@ -25,7 +25,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
 
     lateinit private var binding : ActivityBrowsePhotosBinding
     lateinit var viewModel : BrowsePhotosViewModel
-    private var pageCounter = 0
+    private var pageCounter = 1
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.options_menu, menu)
@@ -56,7 +56,8 @@ class BrowsePhotosActivity : AppCompatActivity() {
     private fun getErrorObserverImpl(): Observer<VolleyError> {
         return Observer {
             Toast.makeText(this, getString(R.string.error_connecting_server), Toast.LENGTH_LONG).show()
-            (recycler.adapter as PhotosAdapter).shouldShowProgressBar = false
+            if (recycler.adapter != null)
+                (recycler.adapter as PhotosAdapter).shouldShowProgressBar = false
         }
     }
 
@@ -68,7 +69,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
 
         override fun onSuggestionClick(position: Int): Boolean {
-            pageCounter = 0
+            pageCounter = 1
             val selectedView = searchView.suggestionsAdapter
             val cursor = selectedView.getItem(position) as Cursor
             val index = cursor.getColumnIndexOrThrow(SearchManager.SUGGEST_COLUMN_TEXT_1)
@@ -90,7 +91,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
                         RecentSuggestionsProvider.AUTHORITY,
                         RecentSuggestionsProvider.MODE
                 ).saveRecentQuery(query, null)
-                viewModel.getBrowsePhotosLiveData(query, (++pageCounter).toString()).observe(this, Observer{
+                viewModel.getBrowsePhotosLiveData(query, pageCounter.toString()).observe(this, Observer{
                     handleSuccess(it) })
             }
         }
@@ -142,6 +143,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
                 val mostBottomViewedPosition = gridLayoutManager.findLastCompletelyVisibleItemPosition()
                 val lastPosition = gridLayoutManager.itemCount - 1
                 if (lastPosition == mostBottomViewedPosition) {
+                    pageCounter++
                     handleIntent(intent)
                 }
             }
