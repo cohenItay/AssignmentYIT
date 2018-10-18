@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pixabay_key">6814610-cd083c066ad38bb511337fb2b</string>
-    <string name="pixabay_url">https://pixabay.com/api/?q=%1$s&amp;key=%2$s&amp;page=%3$s</string>
+    <string name="pixabay_url">https://pixabay.com/api/?q=%1$s&amp;key=%2$s&amp;page=%3$s&amp;per_page=30</string>
 </resources>

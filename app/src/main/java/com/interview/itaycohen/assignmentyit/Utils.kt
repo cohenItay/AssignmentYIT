@@ -17,7 +17,7 @@ fun validateInternetConnection(ctx : Context) : Boolean? {
     return activeNetwork?.isConnectedOrConnecting
 }
 
-fun parseToImageDataList(jsonString : String) : List<ImageData> {
+fun parseToImageDataList(jsonString : String) : ArrayList<ImageData> {
     val images = ArrayList<ImageData>()
     val mainJson : JSONObject
     try {

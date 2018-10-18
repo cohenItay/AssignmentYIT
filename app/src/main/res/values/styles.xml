@@ -9,7 +9,6 @@
     </style>
 
     <style name="ToolbarTextAppearance">
-        <item name="android:fontFamily">sans-serif-condensed</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:shadowDx">1</item>
         <item name="android:shadowDy">1</item>
@@ -17,15 +16,16 @@
         <item name="android:shadowColor">?colorAccent</item>
     </style>
 
-    <style name="ToolbarTextAppearance.Title">
-        <item name="android:textSize">20sp</item>
-    </style>
-
-    <style name="ToolbarTheme" parent="Widget.AppCompat.Toolbar">
-        <item name="theme">@style/ThemeOverlay.AppCompat.Dark</item>
-        <item name="android:textAppearance">@style/ToolbarTextAppearance</item>
+    <style name="ToolbarTheme" parent="Theme.AppCompat">
         <item name="android:background">@color/colorPrimary</item>
-        <item name="android:elevation">4dp</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:textColorSecondary">@color/colorSecondary</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
     </style>
 
+    <style name="ToolbarPopupTheme" parent="Theme.AppCompat">
+        <item name="android:background">@color/colorSecondary</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="actionMenuTextColor">@android:color/white</item>
+    </style>
 </resources>

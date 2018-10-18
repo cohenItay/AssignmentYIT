@@ -22,7 +22,7 @@ class BrowsePhotosViewModel constructor(var app : Application) : AndroidViewMode
         return browsePhotosLiveData!! // no other thread using so it can't be changed back to null
     }
 
-    fun sendSearchQuery(query: String, page:String) {
+    private fun sendSearchQuery(query: String, page:String) {
         val res = app.applicationContext.resources // Note: send activity from UIComponent is forbidden
         val pixabayUrl = res.getString(R.string.pixabay_url, query, res.getString(R.string.pixabay_key), page)
         val request = StringRequest(

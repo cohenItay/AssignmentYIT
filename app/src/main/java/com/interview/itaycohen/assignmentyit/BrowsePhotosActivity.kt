@@ -12,9 +12,11 @@ import android.provider.SearchRecentSuggestions
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.view.Menu
 import android.widget.Toast
+import com.android.volley.VolleyError
 import com.interview.itaycohen.assignmentyit.databinding.ActivityBrowsePhotosBinding
 import kotlinx.android.synthetic.main.activity_browse_photos.*
 
@@ -23,6 +25,17 @@ class BrowsePhotosActivity : AppCompatActivity() {
 
     lateinit private var binding : ActivityBrowsePhotosBinding
     lateinit var viewModel : BrowsePhotosViewModel
+    private var pageCounter = 0
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.options_menu, menu)
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        (menu?.findItem(R.id.search)?.actionView as SearchView).let {
+            it.setSearchableInfo(searchManager.getSearchableInfo(componentName)) // search value will be passed by intent (with intent android.intent.action.SEARCH)
+            it.setOnSuggestionListener(OnSuggestionClickImpl(it))
+        }
+        return true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,30 +48,19 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
 
         viewModel = ViewModelProviders.of(this).get(BrowsePhotosViewModel::class.java)
-        viewModel.errorLiveData.observe(this, Observer {
-            Toast.makeText(this, getString(R.string.error_connecting_server), Toast.LENGTH_LONG).show() })
+        viewModel.errorLiveData.observe(this, getErrorObserverImpl())
         handleIntent(intent)
         initRecycler()
     }
 
-    private fun initRecycler() {
-        binding.recycler.setHasFixedSize(true)
-        binding.recycler.layoutManager = GridLayoutManager(this, 4, GridLayoutManager.VERTICAL, true)
-        binding.recycler.itemAnimator = DefaultItemAnimator()
-        //should have used custom ItemDecoration divider for gridlayout, but i presume its not the case in this task, so i used padding
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.options_menu, menu)
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        (menu?.findItem(R.id.search)?.actionView as SearchView).also {
-            it.setSearchableInfo(searchManager.getSearchableInfo(componentName)) // search value will be passed by intent (with intent android.intent.action.SEARCH)
-            it.setOnSuggestionListener(OnSuggestionClickImpl(it))
+    private fun getErrorObserverImpl(): Observer<VolleyError> {
+        return Observer {
+            Toast.makeText(this, getString(R.string.error_connecting_server), Toast.LENGTH_LONG).show()
+            (recycler.adapter as PhotosAdapter).shouldShowProgressBar = false
         }
-        return true
     }
 
-    class OnSuggestionClickImpl(var searchView: SearchView) : SearchView.OnSuggestionListener {
+    inner class OnSuggestionClickImpl(var searchView: SearchView) : SearchView.OnSuggestionListener {
 
         override fun onSuggestionSelect(position: Int): Boolean {
             //do nothing
@@ -66,6 +68,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
 
         override fun onSuggestionClick(position: Int): Boolean {
+            pageCounter = 0
             val selectedView = searchView.suggestionsAdapter
             val cursor = selectedView.getItem(position) as Cursor
             val index = cursor.getColumnIndexOrThrow(SearchManager.SUGGEST_COLUMN_TEXT_1)
@@ -83,11 +86,11 @@ class BrowsePhotosActivity : AppCompatActivity() {
         if (Intent.ACTION_SEARCH == intent?.action) {
             intent.getStringExtra(SearchManager.QUERY)?.also { query ->
                 SearchRecentSuggestions(
-                        this@BrowsePhotosActivity ,
+                        this ,
                         RecentSuggestionsProvider.AUTHORITY,
                         RecentSuggestionsProvider.MODE
                 ).saveRecentQuery(query, null)
-                viewModel.getBrowsePhotosLiveData(query, "1").observe(this, Observer{
+                viewModel.getBrowsePhotosLiveData(query, (++pageCounter).toString()).observe(this, Observer{
                     handleSuccess(it) })
             }
         }
@@ -101,8 +104,47 @@ class BrowsePhotosActivity : AppCompatActivity() {
         if (recycler.adapter == null){
             recycler.adapter =  PhotosAdapter(images)
         } else {
-            (recycler.adapter as PhotosAdapter).images = images
+            val adapter = recycler.adapter as PhotosAdapter
+            if (pageCounter == 1)
+                adapter.images =  images
+            else
+                adapter.images.addAll(images)
             recycler.adapter.notifyDataSetChanged()
+        }
+    }
+
+    private fun initRecycler() {
+        binding.recycler.setHasFixedSize(true)
+        val gridLayoutManager = GridLayoutManager(this, 3)
+        gridLayoutManager.spanSizeLookup = getSpanSizeLookup()
+        binding.recycler.layoutManager = gridLayoutManager
+        binding.recycler.addOnScrollListener(getOnScrollListenerImpl(gridLayoutManager))
+        //should have used custom ItemDecoration divider for gridlayout, but i presume its not the case in this task, so i used padding
+    }
+
+    private fun getSpanSizeLookup(): GridLayoutManager.SpanSizeLookup {
+        return object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                val adapter = binding.recycler.adapter
+                adapter?.let {
+                    it as PhotosAdapter
+                    if (it.images.size == position) // its the footer (last cell)
+                        return 3 // for progressbar
+                }
+                return 1
+            }
+        }
+    }
+
+    private fun getOnScrollListenerImpl(gridLayoutManager: GridLayoutManager): RecyclerView.OnScrollListener {
+        return object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+                val mostBottomViewedPosition = gridLayoutManager.findLastCompletelyVisibleItemPosition()
+                val lastPosition = gridLayoutManager.itemCount - 1
+                if (lastPosition == mostBottomViewedPosition) {
+                    handleIntent(intent)
+                }
+            }
         }
     }
 }
