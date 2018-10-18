@@ -91,8 +91,10 @@ class BrowsePhotosActivity : AppCompatActivity() {
                         RecentSuggestionsProvider.AUTHORITY,
                         RecentSuggestionsProvider.MODE
                 ).saveRecentQuery(query, null)
-                viewModel.getBrowsePhotosLiveData(query, pageCounter.toString()).observe(this, Observer{
-                    handleSuccess(it) })
+                val liveData = viewModel.getBrowsePhotosLiveData(query, pageCounter.toString())
+                if (!liveData.hasObservers()) {
+                    liveData.observe(this, Observer { handleSuccess(it) })
+                }
             }
         }
     }
