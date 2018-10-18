@@ -10,7 +10,6 @@ import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.provider.SearchRecentSuggestions
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
@@ -31,8 +30,10 @@ class BrowsePhotosActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.options_menu, menu)
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         (menu?.findItem(R.id.search)?.actionView as SearchView).let {
-            it.setSearchableInfo(searchManager.getSearchableInfo(componentName)) // search value will be passed by intent (with intent android.intent.action.SEARCH)
-            it.setOnSuggestionListener(OnSuggestionClickImpl(it))
+            it.setSearchableInfo(searchManager.getSearchableInfo(componentName)) // get the search value and share it by intent (with intent android.intent.action.SEARCH)
+            val searchChangeListener = OnSearchValueChosenImpl(it);
+            it.setOnSuggestionListener(searchChangeListener)
+            it.setOnQueryTextListener(searchChangeListener)
         }
         return true
     }
@@ -61,7 +62,15 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
     }
 
-    inner class OnSuggestionClickImpl(var searchView: SearchView) : SearchView.OnSuggestionListener {
+    inner class OnSearchValueChosenImpl(var searchView: SearchView) : SearchView.OnSuggestionListener, SearchView.OnQueryTextListener {
+        override fun onQueryTextChange(newText: String?): Boolean {
+            return false
+        }
+
+        override fun onQueryTextSubmit(query: String?): Boolean {
+            pageCounter = 1
+            return false
+        }
 
         override fun onSuggestionSelect(position: Int): Boolean {
             //do nothing
@@ -69,7 +78,6 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
 
         override fun onSuggestionClick(position: Int): Boolean {
-            pageCounter = 1
             val selectedView = searchView.suggestionsAdapter
             val cursor = selectedView.getItem(position) as Cursor
             val index = cursor.getColumnIndexOrThrow(SearchManager.SUGGEST_COLUMN_TEXT_1)
