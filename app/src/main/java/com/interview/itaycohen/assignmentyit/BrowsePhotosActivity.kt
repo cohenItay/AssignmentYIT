@@ -68,6 +68,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
 
         override fun onQueryTextSubmit(query: String?): Boolean {
+            // called when suggestion or ime done key clicked
             pageCounter = 1
             return false
         }
@@ -78,8 +79,8 @@ class BrowsePhotosActivity : AppCompatActivity() {
         }
 
         override fun onSuggestionClick(position: Int): Boolean {
-            val selectedView = searchView.suggestionsAdapter
-            val cursor = selectedView.getItem(position) as Cursor
+            val cursorAdapter = searchView.suggestionsAdapter
+            val cursor = cursorAdapter.getItem(position) as Cursor
             val index = cursor.getColumnIndexOrThrow(SearchManager.SUGGEST_COLUMN_TEXT_1)
             searchView.setQuery(cursor.getString(index), true)
             return true
