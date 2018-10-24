@@ -40,6 +40,7 @@ class BrowsePhotosActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //
         binding = DataBindingUtil.setContentView(this, R.layout.activity_browse_photos)
         setSupportActionBar(findViewById(R.id.toolbar))
 
